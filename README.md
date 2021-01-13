@@ -11,27 +11,29 @@
     - LANGUAGE
         - python 3.X    
     - 주의사항
-        - 데이터 적재는 download/당일연도/당일월/당일일 폴더에 쌓인다.
-        - 데이터 재 다운로드시 overwrite 된다.
-        - 날씨 데이터는 매일 변경된다. 전일 데이터가 축적된다.
+        - ~~데이터 적재는 download/당일연도/당일월/당일일 폴더에 쌓인다.~~
+        - ~~데이터 재 다운로드시 overwrite 된다.~~
+        - 날씨 데이터는 매일 변경된다. ~~전일 데이터가 축적된다.~~
         - 위험벨, CCTV는 주기적으로 변경이 있는 듯 하다.
         - url 변경, 파일 이름 변경으로 인한 데이터 수집 불가 이슈가 있을 수 있다. 해당 내용을 참고할 것
     - 추가 고민사항    
         - 데이터 수집이 에러가 생겼을 시 정해진 매일주소로 메일을 보내는 방법을 고민한다.
-5. 수집
-    1. flask_nice_queue.py 를 실행
-    2. http://localhost:9000 에서 수집 요청
-        - 개별 brand_cd 수집 http://localhost:9000/crawl_nice?brand_cd=${brand_cd}
-        - 해당 view_way 수집 http://localhost:9000/crawl_group?view_way=${view_way}
-        - 전체 brand 수집 http://localhost:9000/crawl_nice?all_scrape=yes
-    3. 주의사항
-        - 수집 중에는 재 수집 요청은 거부된다.  
-        - active = true 인 brand만 수집된다.
-        - 포탈 수집은 kakao 에서 수집되기에 수집시 차단되지 않도록 유의한다.
-        - DB는 51 server와 연결 되어있다. 
-        - all or view_way 수집시 하나 수집 끝나면 다음 수집이 바로 진행된다.
-        
 
+2021-01-13
+        
+비교 프로세스 추가
+CCTV_URL 오류 화장실 -> CCTV
+기존 download/연도/월/일/해당파일 -> download/해당파일 폴더 구조 변경 
+
+opendata-downloader 프로젝트 생성 (git 반영)
+ - 경찰청, 소방청, CCTV, 위험벨, 날씨데이터 매일 수집시 수집가능한 프로젝트
+ - 현재 실행 X
+ - 파일 생성 규칙 
+     기존 파일 없으면 생성 
+     기존 파일 있고 기존과 다르면 새로 생성 (기존파일 삭제)
+     기존 파일 있고 기존과 같으면 변화 없음
+ - 파일은 세가지 유형으로 생성됌 csv, xlsx, zip 이는 원본파일에서 제공방식유지
+ 
 <!-- 주석 필요시 따로 사용
 - [ ]  체크 X
 - [x]  체크
