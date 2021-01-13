@@ -2,6 +2,7 @@ import datetime
 import time
 import requests
 import os
+from filecmp import cmp
 
 def createFolder(directory):
     try:
@@ -19,7 +20,8 @@ class CsvDownloader:
         self.POLICE_NAME = "policeAgency.csv"
         self.POLICE_URL = "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000002303113&fileDetailSn=1&dataNm=%EA%B2%BD%EC%B0%B0%EC%B2%AD_%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%84%9C%20%EC%9C%84%EC%B9%98,%20%EC%A3%BC%EC%86%8C_20200409"
 
-        self.CCTV_URL ="https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_01_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=%25EA%25B3%25B5%25EC%25A4%2591%25ED%2599%2594%25EC%259E%25A5%25EC%258B%25A4%25EC%25A0%2595%25EB%25B3%25B4"
+        # self.CCTV_URL = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_01_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=CCTV%25EC%25A0%2595%25EB%25B3%25B4"
+        self.CCTV_URL = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_08_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=CCTV%25EC%25A0%2595%25EB%25B3%25B4"
 
         self.BALL_NAME = "ball.csv"
         self.BALL_URL = "https://www.data.go.kr/tcs/dss/stdFileDown.do"
@@ -32,14 +34,15 @@ class CsvDownloader:
 
         today = datetime.datetime.today()
         yesterday = today - datetime.timedelta(days=1)
+        str_today = today.strftime("%Y%m%d")
         str_yesterday = yesterday.strftime("%Y%m%d")
         start_date = str_yesterday
         end_date = str_yesterday
 
         self.DIR_PATH = "../download/"\
-                        +today.strftime("%Y")+"/"\
-                        +today.strftime("%m")+"/"\
-                        +today.strftime("%d")+"/"
+                        # +today.strftime("%Y")+"/"\
+                        # +today.strftime("%m")+"/"\
+                        # +today.strftime("%d")+"/"
         createFolder(self.DIR_PATH)
 
         self.WEATHER_START_URL = "https://data.kma.go.kr/data/common/downloadDataCVS.do"
@@ -113,6 +116,7 @@ class CsvDownloader:
 
     def download(self, url, file_name, data=None, option=None):
         file_path = self.DIR_PATH + file_name
+        temp_file_path = self.DIR_PATH + "temp_" + file_name
         if option and data:
             if "headers" in option:
                 response = requests.request(method="POST", url=url, data=data, headers=option['headers'])
@@ -121,9 +125,27 @@ class CsvDownloader:
         else:
             response = requests.request(method="GET", url=url)
         csv_content = response.content
-        csv_file = open(file_path, "wb")
-        csv_file.write(csv_content)
-        csv_file.close()
+        # 만약 file_path 에 해당 내용이 있다면 temp_file 생성 후 해당 내용을 비교한다.
+        #   없다면 file_path에 파일을 생성하고 끝낸다.
+        # 비교시 차이가 있다면 file_path 에 file을 삭제 하고 temp_file 의 이름을 rename 한다.
+        #   없다면
+        if os.path.isfile(file_path):
+            print(f"[{file_path}]기존 파일 존재")
+            csv_file = open(temp_file_path, "wb")
+            csv_file.write(csv_content)
+            csv_file.close()
+            if not cmp(file_path, temp_file_path):
+                print(f"\t[{file_path}]기존 파일과 임시 파일 다름")
+                os.remove(file_path)
+                os.rename(temp_file_path, file_path)
+            else:
+                print(f"\t[{file_path}]기존 파일과 임시 파일 같음")
+                os.remove(temp_file_path)
+        else:
+            print(f"[{file_path}]기존 파일 존재 X")
+            csv_file = open(file_path, "wb")
+            csv_file.write(csv_content)
+            csv_file.close()
 
 if __name__ == "__main__":
     stime = time.time()  # 시작시간
