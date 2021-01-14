@@ -4,12 +4,8 @@ import requests
 import os
 from filecmp import cmp
 
-def createFolder(directory):
-    try:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-    except OSError:
-        print('Error: Creating directory. ' + directory)
+# from src.util import get_today_ago_n_str, create_folder, write_file
+from util import get_today_ago_n_str, create_folder, write_file
 
 class CsvDownloader:
 
@@ -32,18 +28,17 @@ class CsvDownloader:
         self.WEATHER_URL = "https://data.kma.go.kr/download/fileDownload.do"
         self.WEATHER_NAME = "weather.csv"
 
-        today = datetime.datetime.today()
-        yesterday = today - datetime.timedelta(days=1)
-        str_today = today.strftime("%Y%m%d")
-        str_yesterday = yesterday.strftime("%Y%m%d")
-        start_date = str_yesterday
-        end_date = str_yesterday
+        # str_today = get_today_str()
+        str_ago_day = get_today_ago_n_str(1)
+        start_date = str_ago_day
+        end_date = str_ago_day
 
-        self.DIR_PATH = "../download/"\
-                        # +today.strftime("%Y")+"/"\
+        self.DIR_PATH = "../download/" \
+            # +today.strftime("%Y")+"/"\
                         # +today.strftime("%m")+"/"\
                         # +today.strftime("%d")+"/"
-        createFolder(self.DIR_PATH)
+        # util = Util()
+        create_folder(self.DIR_PATH)
 
         self.WEATHER_START_URL = "https://data.kma.go.kr/data/common/downloadDataCVS.do"
         "fileType=csv" \
@@ -131,9 +126,7 @@ class CsvDownloader:
         #   없다면
         if os.path.isfile(file_path):
             print(f"[{file_path}]기존 파일 존재")
-            csv_file = open(temp_file_path, "wb")
-            csv_file.write(csv_content)
-            csv_file.close()
+            write_file(file_content=csv_content, file_path=temp_file_path)
             if not cmp(file_path, temp_file_path):
                 print(f"\t[{file_path}]기존 파일과 임시 파일 다름")
                 os.remove(file_path)
@@ -143,9 +136,7 @@ class CsvDownloader:
                 os.remove(temp_file_path)
         else:
             print(f"[{file_path}]기존 파일 존재 X")
-            csv_file = open(file_path, "wb")
-            csv_file.write(csv_content)
-            csv_file.close()
+            write_file(file_content=csv_content, file_path=file_path)
 
 if __name__ == "__main__":
     stime = time.time()  # 시작시간
