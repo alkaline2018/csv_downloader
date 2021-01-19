@@ -17,7 +17,6 @@ def write_file(file_content, file_path):
         csv_file = open(file_path, "wb")
         csv_file.write(file_content)
         csv_file.close()
-
     except Exception as e:
         print(f'Error: {e}')
 
