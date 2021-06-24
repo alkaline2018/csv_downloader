@@ -18,6 +18,8 @@ class CsvDownloader:
 
         # self.CCTV_URL = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_01_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=CCTV%25EC%25A0%2595%25EB%25B3%25B4"
         self.CCTV_URL = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_08_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=CCTV%25EC%25A0%2595%25EB%25B3%25B4"
+        self.BALL_URL2 = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_09_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=%25EC%2595%2588%25EC%25A0%2584%25EB%25B9%2584%25EC%2583%2581%25EB%25B2%25A8%25EC%259C%2584%25EC%25B9%2598%25EC%25A0%2595%25EB%25B3%25B4"
+
 
         self.BALL_NAME = "ball.csv"
         self.BALL_URL = "https://www.data.go.kr/tcs/dss/stdFileDown.do"
@@ -32,6 +34,8 @@ class CsvDownloader:
         str_ago_day = get_today_ago_n_str(1)
         start_date = str_ago_day
         end_date = str_ago_day
+        # start_date = "20201001"
+        # end_date = "20201231"
 
         self.DIR_PATH = "../download/" \
             # +today.strftime("%Y")+"/"\
@@ -141,24 +145,29 @@ class CsvDownloader:
 if __name__ == "__main__":
     stime = time.time()  # 시작시간
     csv_downloader = CsvDownloader()
-
-    # HINT: 소방청 완료 파일이름 .zip GET
+    #
+    # # HINT: 소방청 완료 파일이름 .zip GET
     csv_downloader.download(url=csv_downloader.FIRE_URL,
                             file_name=csv_downloader.FIRE_NAME)
-    # HINT: 경찰청 완료 파일이름 .csv GET
+    # # HINT: 경찰청 완료 파일이름 .csv GET
     csv_downloader.download(url=csv_downloader.POLICE_URL,
                             file_name=csv_downloader.POLICE_NAME)
-    # HINT: CCTV 파일이름 .csv GET 시도별
+    # # HINT: CCTV 파일이름 .csv GET 시도별
     for localCodeEx in csv_downloader.LOCAL_CODE_EXS:
         # 추후 날짜 변경해야함
         csv_downloader.download(url=csv_downloader.CCTV_URL + "&localCodeEx=" + localCodeEx['value'] + "&sidoCodeEx=" + localCodeEx['value'],
                                 file_name="cctv_"+localCodeEx['sido']+".xlsx")
+    # # HINT: 비상벨 파일이름 .csv GET 시도별
+    for localCodeEx in csv_downloader.LOCAL_CODE_EXS:
+        # 추후 날짜 변경해야함
+        csv_downloader.download(url=csv_downloader.BALL_URL2 + "&localCodeEx=" + localCodeEx['value'] + "&sidoCodeEx=" + localCodeEx['value'],
+                                file_name="ball_"+localCodeEx['sido']+".xlsx")
 
-    # HINT: 비상벨 파일이름 .csv POST
-    csv_downloader.download(url=csv_downloader.BALL_URL,
-                            file_name=csv_downloader.BALL_NAME,
-                            data=csv_downloader.BALL_DATA,
-                            option={"method": "POST"})
+    # # HINT: 비상벨 파일이름 .csv POST
+    # csv_downloader.download(url=csv_downloader.BALL_URL,
+    #                         file_name=csv_downloader.BALL_NAME,
+    #                         data=csv_downloader.BALL_DATA,
+    #                         option={"method": "POST"})
     # HINT: 날씨 파일이름 .csv POST
     file_url = csv_downloader.get_response_content_decode(url=csv_downloader.WEATHER_START_URL, data=csv_downloader.WEATHER_START_DATA)
     data = {"file": file_url}
