@@ -5,39 +5,44 @@ import os
 from filecmp import cmp
 
 # from src.util import get_today_ago_n_str, create_folder, write_file
+from env import config
 from util import get_today_ago_n_str, create_folder, write_file
 
 class CsvDownloader:
 
     def __init__(self):
-        self.FIRE_NAME = "fireAgency.zip"
-        self.FIRE_URL = "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000001491645&fileDetailSn=1&dataNm=%EC%86%8C%EB%B0%A9%EC%B2%AD_%EC%A0%84%EA%B5%AD%20%EC%86%8C%EB%B0%A9%EC%84%9C%20%EB%B0%8F%20119%EC%95%88%EC%A0%84%EC%84%BC%ED%84%B0%20%EC%A0%95%EB%B3%B4(2018.11.28)"
-
-        self.POLICE_NAME = "policeAgency.csv"
-        self.POLICE_URL = "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000002303113&fileDetailSn=1&dataNm=%EA%B2%BD%EC%B0%B0%EC%B2%AD_%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%84%9C%20%EC%9C%84%EC%B9%98,%20%EC%A3%BC%EC%86%8C_20200409"
+        self.download_config = config.config(section="download")
+        self.FIRE_NAME = self.download_config['fire_name']
+        self.FIRE_URL = self.download_config['fire_url']
+        self.POLICE_NAME = self.download_config['police_name']
+        self.POLICE_URL = self.download_config['police_url']
+        self.SMART_STREET_LAMP_NAME = self.download_config['smart_street_lamp_name']
+        self.SMART_STREET_LAMP_URL = self.download_config['smart_street_lamp_url']
 
         # self.CCTV_URL = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_01_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=CCTV%25EC%25A0%2595%25EB%25B3%25B4"
-        self.CCTV_URL = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_08_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=CCTV%25EC%25A0%2595%25EB%25B3%25B4"
-        self.BALL_URL2 = "https://www.localdata.go.kr/lif/etcDataDownload.do?sigunguCodeEx=&opnSvcIdEx=12_04_09_E&startDateEx=&endDateEx=&fileType=xlsx&opnSvcNmEx=%25EC%2595%2588%25EC%25A0%2584%25EB%25B9%2584%25EC%2583%2581%25EB%25B2%25A8%25EC%259C%2584%25EC%25B9%2598%25EC%25A0%2595%25EB%25B3%25B4"
-
-
-        self.BALL_NAME = "ball.csv"
-        self.BALL_URL = "https://www.data.go.kr/tcs/dss/stdFileDown.do"
+        self.CCTV_URL = self.download_config['cctv_url']
+        self.BALL_URL2 = self.download_config['ball_url2']
+        self.BALL_NAME = self.download_config['ball_name']
+        self.BALL_URL = self.download_config['ball_url']
         self.BALL_DATA = {"publicDataPk": 15028206,
                  "publicDataSj": "전국안전비상벨위치표준데이터",
                  "file": "csv"}
 
         self.WEATHER_URL = "https://data.kma.go.kr/download/fileDownload.do"
-        self.WEATHER_NAME = "weather.csv"
-
         # str_today = get_today_str()
         str_ago_day = get_today_ago_n_str(1)
-        start_date = str_ago_day
-        end_date = str_ago_day
-        # start_date = "20201001"
-        # end_date = "20201231"
+        start_date = str_ago_day if self.download_config['start_date'] == 'yesterday' else self.download_config['start_date']
+        end_date = str_ago_day if self.download_config['end_date'] == 'yesterday' else self.download_config['end_date']
 
-        self.DIR_PATH = "../download/" \
+        if self.download_config['start_date'] == 'yesterday' and self.download_config['end_date'] == 'yesterday':
+            self.WEATHER_NAME = "weather.csv"
+        else:
+            self.WEATHER_NAME = start_date + "_" + end_date + "_weather.csv"
+
+        ABS_PATH = os.path.dirname(os.path.abspath(__file__))
+
+        # self.DIR_PATH = _abs_path + "../download/" \
+        self.DIR_PATH = os.path.join(ABS_PATH, "../download")
             # +today.strftime("%Y")+"/"\
                         # +today.strftime("%m")+"/"\
                         # +today.strftime("%d")+"/"
@@ -114,8 +119,8 @@ class CsvDownloader:
         return decode_url
 
     def download(self, url, file_name, data=None, option=None):
-        file_path = self.DIR_PATH + file_name
-        temp_file_path = self.DIR_PATH + "temp_" + file_name
+        file_path = os.path.join(self.DIR_PATH, file_name)
+        temp_file_path = os.path.join(self.DIR_PATH, "temp_" + file_name)
         if option and data:
             if "headers" in option:
                 response = requests.request(method="POST", url=url, data=data, headers=option['headers'])
@@ -145,13 +150,18 @@ class CsvDownloader:
 if __name__ == "__main__":
     stime = time.time()  # 시작시간
     csv_downloader = CsvDownloader()
-    #
+    # NOTE: 이제 소방청, 경찰청 은 여기서 수집 하지 않고 nice_frachise crawler 에서 학교와 함께 수집한다.
     # # HINT: 소방청 완료 파일이름 .zip GET
-    csv_downloader.download(url=csv_downloader.FIRE_URL,
-                            file_name=csv_downloader.FIRE_NAME)
+    # csv_downloader.download(url=csv_downloader.FIRE_URL,
+    #                         file_name=csv_downloader.FIRE_NAME)
     # # HINT: 경찰청 완료 파일이름 .csv GET
-    csv_downloader.download(url=csv_downloader.POLICE_URL,
-                            file_name=csv_downloader.POLICE_NAME)
+    # csv_downloader.download(url=csv_downloader.POLICE_URL,
+    #                         file_name=csv_downloader.POLICE_NAME)
+    # # HINT: 스마트가로등 완료 파일이름 .csv GET
+    csv_downloader.download(url=csv_downloader.SMART_STREET_LAMP_URL,
+                            file_name=csv_downloader.SMART_STREET_LAMP_NAME)
+
+
     # # HINT: CCTV 파일이름 .csv GET 시도별
     for localCodeEx in csv_downloader.LOCAL_CODE_EXS:
         # 추후 날짜 변경해야함
@@ -164,10 +174,10 @@ if __name__ == "__main__":
                                 file_name="ball_"+localCodeEx['sido']+".xlsx")
 
     # # HINT: 비상벨 파일이름 .csv POST
-    # csv_downloader.download(url=csv_downloader.BALL_URL,
-    #                         file_name=csv_downloader.BALL_NAME,
-    #                         data=csv_downloader.BALL_DATA,
-    #                         option={"method": "POST"})
+    csv_downloader.download(url=csv_downloader.BALL_URL,
+                            file_name=csv_downloader.BALL_NAME,
+                            data=csv_downloader.BALL_DATA,
+                            option={"method": "POST"})
     # HINT: 날씨 파일이름 .csv POST
     file_url = csv_downloader.get_response_content_decode(url=csv_downloader.WEATHER_START_URL, data=csv_downloader.WEATHER_START_DATA)
     data = {"file": file_url}

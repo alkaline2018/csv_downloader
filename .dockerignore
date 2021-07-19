@@ -1,0 +1,5 @@
+*.md
+!README.md
+.idea
+download/*
+test_config.py
